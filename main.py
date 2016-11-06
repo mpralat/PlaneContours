@@ -81,7 +81,7 @@ def transform(img_path):
     # cv2.imwrite('test3_adaptiveThreshold.jpg', img_grayscale)
 
     # Gaussian blur
-    # img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 1.0)
+    img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 1.0)
     # img_grayscale = cv2.addWeighted(img_grayscale, 1.5, blurred_image, -0.5, 0)
     cv2.imwrite('test4_sharpen.jpg', img_grayscale)
 
@@ -90,13 +90,16 @@ def transform(img_path):
     # img_grayscale = cv2.Canny(img_grayscale, 100, 200)
     img_grayscale = auto_canny(img_grayscale)
     cv2.imwrite('test6_canny.jpg', img_grayscale)
+    # Apply dilation to merge neighbouring contours
     img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_DILATE, kernel=np.ones((2, 2), np.uint8))
     cv2.imwrite('test7_dillatation.jpg', img_grayscale)
 
 # After preprocessing the picture we get the contours and centroids
     _, contours, hierarchy = cv2.findContours(img_grayscale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for idx, contour in enumerate(contours):
-        if cv2.contourArea(contour):
+        contour_area = cv2.contourArea(contour)
+        # Discard small contours that aren't planes for sure
+        if contour_area > 150:
             M = cv2.moments(contour)
             centroid_x = int(M['m10'] / M['m00'])
             centroid_y = int(M['m01'] / M['m00'])
