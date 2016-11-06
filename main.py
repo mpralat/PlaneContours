@@ -5,6 +5,16 @@ import sys
 import numpy as np
 import cv2
 
+colors = [
+    (204, 204, 0),
+    (255, 0, 0),
+    (255, 255, 0),
+    (0, 255, 255),
+    (255, 0, 255),
+    (255, 51, 153)
+]
+color_idx = 0
+
 
 def parse(arguments):
     """
@@ -30,9 +40,9 @@ def convert_to_black_white(pixel):
     r, g, b = pixel
     brightness = np.math.sqrt(0.299 * (r ** 2) + 0.587 * (g ** 2) + 0.114 * (b ** 2))
     if brightness < 0.5:
-        return (0,0,0)
+        return (0, 0, 0)
     else:
-        return (255,255,255)
+        return (255, 255, 255)
 
 
 def auto_canny(image, sigma=0.33):
@@ -50,6 +60,7 @@ def auto_canny(image, sigma=0.33):
 
 def transform(img_path):
     # Load image in color and grayscale
+    global color_idx
     img_grayscale = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     img_color = cv2.imread(img_path)
     cv2.imwrite('test1_orig.jpg', img_grayscale)
@@ -76,7 +87,7 @@ def transform(img_path):
 
     # img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((3, 3), np.uint8))
     # cv2.imwrite('test5_morph2.jpg', img_grayscale)
-    #img_grayscale = cv2.Canny(img_grayscale, 100, 200)
+    # img_grayscale = cv2.Canny(img_grayscale, 100, 200)
     img_grayscale = auto_canny(img_grayscale)
     cv2.imwrite('test6_canny.jpg', img_grayscale)
 
@@ -88,9 +99,10 @@ def transform(img_path):
             centroid_x = int(M['m10'] / M['m00'])
             centroid_y = int(M['m01'] / M['m00'])
             cv2.circle(img_color, center=(centroid_x, centroid_y), radius=2, color=(255, 255, 255))
-            cv2.drawContours(img_color, contours, idx, (255, 255, 0), 3)
+            cv2.drawContours(img_color, contours, idx, colors[color_idx], 3)
+            color_idx = (color_idx + 1) % len(colors)
     # ctn = sorted(contours, key=cv2.contourArea, reverse=True)[:20]
-    # cv2.drawContours(img_copy, contours, -1, (255,0,0), 3)
+    # cv2.drawContours(img_color, contours, -1, (255,0,0), 3)
 
     return img_color
 
