@@ -35,28 +35,50 @@ def convert_to_black_white(pixel):
         return (255,255,255)
 
 
+def auto_canny(image, sigma=0.33):
+    # compute the median of the single channel pixel intensities
+    v = np.median(image)
+
+    # apply automatic Canny edge detection using the computed median
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    edged = cv2.Canny(image, lower, upper)
+
+    # return the edged image
+    return edged
+
+
 def transform(img_path):
     # Load image in color and grayscale
     img_grayscale = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     img_color = cv2.imread(img_path)
+    cv2.imwrite('test1_orig.jpg', img_grayscale)
 
     # Here we need to apply different functions to obtain a good base for getting the contours
     # Apply morphological transformation - opening (erosion and then dilation) - reduces noise
-    img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_OPEN, kernel=np.ones((3, 3), np.uint8))
+    img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_OPEN, kernel=np.ones((5, 5), np.uint8))
     cv2.imwrite('test2_morph.jpg', img_grayscale)
 
     # Apply histogram equalisation based on the cumulative distribution of intensity with limited contrast
-    clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(8, 8))
-    img_grayscale = clahe.apply(img_grayscale)
-    cv2.imwrite('test3_clahe.jpg', img_grayscale)
+    # clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
+    # img_grayscale = clahe.apply(img_grayscale)
+    # cv2.imwrite('test3_clahe.jpg', img_grayscale)
 
-    # img = cv2.equalizeHist(img)
-    # cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    # Adaptive thresholding
+    # img_grayscale = cv2.equalizeHist(img_grayscale)
+    # cv2.adaptiveThreshold(img_grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 5)
+    # cv2.imwrite('test3_adaptiveThreshold.jpg', img_grayscale)
 
-    img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((3, 3), np.uint8))
-    cv2.imwrite('test4_morph2.jpg', img_grayscale)
-    img_grayscale = cv2.Canny(img_grayscale, 100, 200)
-    cv2.imwrite('test5_canny.jpg', img_grayscale)
+    # Gaussian blur
+    img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 1.0)
+    # img_grayscale = cv2.addWeighted(img_grayscale, 1.5, blurred_image, -0.5, 0)
+    cv2.imwrite('test4_sharpen.jpg', img_grayscale)
+
+    # img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((3, 3), np.uint8))
+    # cv2.imwrite('test5_morph2.jpg', img_grayscale)
+    #img_grayscale = cv2.Canny(img_grayscale, 100, 200)
+    img_grayscale = auto_canny(img_grayscale)
+    cv2.imwrite('test6_canny.jpg', img_grayscale)
 
     # After preprocessing the picture we get the contours and centroids
     _, contours, hierarchy = cv2.findContours(img_grayscale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
