@@ -3,13 +3,15 @@ import glob
 import argparse
 import sys
 import numpy as np
-
 import cv2
 
 
-# Parsing arguments given in the command line
-# If there are none, we take pictures from input folder and saving to output
 def parse(arguments):
+    """
+    Parsing arguments given in the command line
+    If there are none, we take pictures from input folder and saving to output
+    :param arguments program arguments supplied via the command prompt
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-o',
@@ -24,33 +26,51 @@ def parse(arguments):
     return parser.parse_args()
 
 
-def transform(img_path):
-    img = cv2.imread(img_path, 0)
+def convert_to_black_white(pixel):
+    r, g, b = pixel
+    brightness = np.math.sqrt(0.299 * (r ** 2) + 0.587 * (g ** 2) + 0.114 * (b ** 2))
+    if brightness < 0.5:
+        return (0,0,0)
+    else:
+        return (255,255,255)
 
-    img_copy = cv2.imread(img_path)
+
+def transform(img_path):
+    # Load image in color and grayscale
+    img_grayscale = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    img_color = cv2.imread(img_path)
 
     # Here we need to apply different functions to obtain a good base for getting the contours
-    img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel=np.ones((3, 3), np.uint8))
+    # Apply morphological transformation - opening (erosion and then dilation) - reduces noise
+    img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_OPEN, kernel=np.ones((3, 3), np.uint8))
+    cv2.imwrite('test2_morph.jpg', img_grayscale)
+
+    # Apply histogram equalisation based on the cumulative distribution of intensity with limited contrast
     clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(8, 8))
-    img = clahe.apply(img)
+    img_grayscale = clahe.apply(img_grayscale)
+    cv2.imwrite('test3_clahe.jpg', img_grayscale)
+
     # img = cv2.equalizeHist(img)
     # cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-    img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel=np.ones((3, 3), np.uint8))
-    img = cv2.Canny(img, 100, 200)
+
+    img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((3, 3), np.uint8))
+    cv2.imwrite('test4_morph2.jpg', img_grayscale)
+    img_grayscale = cv2.Canny(img_grayscale, 100, 200)
+    cv2.imwrite('test5_canny.jpg', img_grayscale)
 
     # After preprocessing the picture we get the contours and centroids
-    _, contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findContours(img_grayscale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for idx, contour in enumerate(contours):
         if cv2.contourArea(contour):
             M = cv2.moments(contour)
             centroid_x = int(M['m10'] / M['m00'])
             centroid_y = int(M['m01'] / M['m00'])
-            cv2.circle(img_copy, center=(centroid_x, centroid_y), radius=2, color=(255, 255, 255))
-            cv2.drawContours(img_copy, contours, idx, (255, 255, 0), 3)
+            cv2.circle(img_color, center=(centroid_x, centroid_y), radius=2, color=(255, 255, 255))
+            cv2.drawContours(img_color, contours, idx, (255, 255, 0), 3)
     # ctn = sorted(contours, key=cv2.contourArea, reverse=True)[:20]
     # cv2.drawContours(img_copy, contours, -1, (255,0,0), 3)
 
-    return img_copy
+    return img_color
 
 
 if __name__ == "__main__":
