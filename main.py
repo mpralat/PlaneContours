@@ -81,17 +81,19 @@ def transform(img_path):
     # cv2.imwrite('test3_adaptiveThreshold.jpg', img_grayscale)
 
     # Gaussian blur
-    img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 1.0)
+    # img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 1.0)
     # img_grayscale = cv2.addWeighted(img_grayscale, 1.5, blurred_image, -0.5, 0)
     cv2.imwrite('test4_sharpen.jpg', img_grayscale)
 
-    # img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((3, 3), np.uint8))
+    # img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((15, 15), np.uint8))
     # cv2.imwrite('test5_morph2.jpg', img_grayscale)
     # img_grayscale = cv2.Canny(img_grayscale, 100, 200)
     img_grayscale = auto_canny(img_grayscale)
     cv2.imwrite('test6_canny.jpg', img_grayscale)
+    img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_DILATE, kernel=np.ones((2, 2), np.uint8))
+    cv2.imwrite('test7_dillatation.jpg', img_grayscale)
 
-    # After preprocessing the picture we get the contours and centroids
+# After preprocessing the picture we get the contours and centroids
     _, contours, hierarchy = cv2.findContours(img_grayscale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for idx, contour in enumerate(contours):
         if cv2.contourArea(contour):
