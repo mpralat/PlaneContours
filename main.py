@@ -4,6 +4,7 @@ import argparse
 import sys
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 colors = [
     (204, 204, 0),
@@ -94,7 +95,7 @@ def transform(img_path):
     img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_DILATE, kernel=np.ones((2, 2), np.uint8))
     cv2.imwrite('test7_dillatation.jpg', img_grayscale)
 
-# After preprocessing the picture we get the contours and centroids
+    # After preprocessing the picture we get the contours and centroids
     _, contours, hierarchy = cv2.findContours(img_grayscale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for idx, contour in enumerate(contours):
         contour_area = cv2.contourArea(contour)
@@ -118,7 +119,13 @@ if __name__ == "__main__":
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
+    fig = plt.figure()
+
     print(args.output)
-    for img in glob.glob(os.path.join(args.input, "*.jpg")):
+    for idx, img in enumerate(glob.glob(os.path.join(args.input, "*.jpg"))):
         print(os.path.join(args.output, os.path.basename(img)))
-        cv2.imwrite(os.path.join(args.output, os.path.basename(img)), transform(img))
+        a = fig.add_subplot(6, 3, idx+1)
+        # cv2.imwrite(os.path.join(args.output, os.path.basename(img)), transform(img))
+        imgplot = plt.imshow(transform(img))
+
+    plt.show()
