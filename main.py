@@ -46,15 +46,15 @@ def convert_to_black_white(pixel):
 
 
 def auto_canny(image, sigma=0.33):
-    # compute the median of the single channel pixel intensities
+    # Compute the median of the single channel pixel intensities
     v = np.median(image)
 
-    # apply automatic Canny edge detection using the computed median
+    # Apply automatic Canny edge detection using the computed median
     lower = int(max(0, (1.0 - sigma) * v))
     upper = int(min(255, (1.0 + sigma) * v))
     edged = cv2.Canny(image, lower, upper)
 
-    # return the edged image
+    # Return the edged image
     return edged
 
 
@@ -71,8 +71,8 @@ def transform(img_path):
     cv2.imwrite('test2_morph.jpg', img_grayscale)
 
     # Apply histogram equalisation based on the cumulative distribution of intensity with limited contrast
-    # clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(5, 5))
-    # img_grayscale = clahe.apply(img_grayscale)
+    clahe = cv2.createCLAHE(clipLimit=0.35, tileGridSize=(5, 5))
+    img_grayscale = clahe.apply(img_grayscale)
     # cv2.imwrite('test3_clahe.jpg', img_grayscale)
 
     # Adaptive thresholding
@@ -81,14 +81,14 @@ def transform(img_path):
     # cv2.imwrite('test3_adaptiveThreshold.jpg', img_grayscale)
 
     # Gaussian blur
-    # img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 1.0)
+    # img_grayscale = cv2.GaussianBlur(img_grayscale, (0, 0), 0.25)
     # img_grayscale = cv2.addWeighted(img_grayscale, 1.5, blurred_image, -0.5, 0)
     cv2.imwrite('test4_sharpen.jpg', img_grayscale)
 
-    # img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((15, 15), np.uint8))
+    # img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_CLOSE, kernel=np.ones((5, 5), np.uint8))
     # cv2.imwrite('test5_morph2.jpg', img_grayscale)
-    img_grayscale = cv2.Canny(img_grayscale, 80, 200)
-    # img_grayscale = auto_canny(img_grayscale)
+    #img_grayscale = cv2.Canny(img_grayscale, 104, 170)
+    img_grayscale = auto_canny(img_grayscale, 0.560)
     cv2.imwrite('test6_canny.jpg', img_grayscale)
     # Apply dilation to merge neighbouring contours
     img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_DILATE, kernel=np.ones((2, 2), np.uint8))
@@ -99,7 +99,7 @@ def transform(img_path):
     for idx, contour in enumerate(contours):
         contour_area = cv2.contourArea(contour)
         # Discard small contours that aren't planes for sure
-        if contour_area > 150:
+        if contour_area > 590:
             M = cv2.moments(contour)
             centroid_x = int(M['m10'] / M['m00'])
             centroid_y = int(M['m01'] / M['m00'])
