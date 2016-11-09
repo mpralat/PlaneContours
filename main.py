@@ -1,30 +1,30 @@
 import os
 import glob
 import argparse
-import sys
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 
 colors = [
-    (204, 0, 0),
-    (204,204,0),
-    (0,204,0),
-    (102,0,204),
-    (204,0,204),
-    (255,128,0),
-    (255,255,0),
+    (204, 0, 204),
+    (204, 204, 0),
+    (0, 204, 0),
+    (102, 0, 204),
+    (255, 128, 0),
+    (255, 255, 0),
     (0, 204, 204),
-    (0,255,0),
-    (51,255,255),
-    (255,102,178),
-    (153,255,153),
-    (255,153,153)
+    (0, 255, 0),
+    (51, 255, 255),
+    (204, 0, 0),
+    (255, 102, 178),
+    (153, 255, 153),
+    (255, 153, 153)
 ]
 color_idx = 0
 
 
-def parse(arguments):
+def parse():
     """
     Parsing arguments given in the command line
     If there are none, we take pictures from input folder and saving to output
@@ -64,7 +64,6 @@ def transform(img_path):
     img_color = cv2.imread(img_path)
     cv2.imwrite('test1_orig.jpg', img_grayscale)
 
-    cv2.imwrite('test_gamma_correction.jpg', img_grayscale)
     # Here we need to apply different functions to obtain a good base for getting the contours
     # Apply morphological transformation - opening (erosion and then dilation) - reduces noise
     img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_OPEN, kernel=np.ones((5, 5), np.uint8))
@@ -75,14 +74,14 @@ def transform(img_path):
     img_grayscale = clahe.apply(img_grayscale)
     cv2.imwrite('test3_clahe.jpg', img_grayscale)
 
-
+    # Using the Canny algorithm to detect the edges.
     img_grayscale = auto_canny(img_grayscale, 0.560)
     cv2.imwrite('test6_canny.jpg', img_grayscale)
-    # Apply dilation to merge neighbouring contours
+    # Apply dilation to merge neighbouring contours.
     img_grayscale = cv2.morphologyEx(img_grayscale, cv2.MORPH_DILATE, kernel=np.ones((2, 2), np.uint8))
     cv2.imwrite('test7_dillatation.jpg', img_grayscale)
 
-    # After preprocessing the picture we get the contours and centroids
+# After preprocessing the picture we get the contours and centroids
     _, contours, hierarchy = cv2.findContours(img_grayscale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for idx, contour in enumerate(contours):
         contour_area = cv2.contourArea(contour)
@@ -99,13 +98,23 @@ def transform(img_path):
 
 
 if __name__ == "__main__":
-    args = parse(sys.argv)
+    args = parse()
+
+    fig = plt.figure()
+    fig.set_size_inches(30, 20)
 
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
     print(args.output)
 
-    for img in glob.glob(os.path.join(args.input, "*.jpg")):
+    for idx, img in enumerate(glob.glob(os.path.join(args.input, "*.jpg"))):
         print(os.path.join(args.output, os.path.basename(img)))
+        a = fig.add_subplot(3, 3, idx % 9 + 1)
+        a.axis("off")
+        imgplot = plt.imshow(cv2.cvtColor(transform(img), cv2.COLOR_BGR2RGB))
+
         cv2.imwrite(os.path.join(args.output, os.path.basename(img)), transform(img))
+        if (idx + 1) % 9 == 0:
+            plt.savefig("results" + str(idx) + ".pdf")
+
