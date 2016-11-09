@@ -96,12 +96,23 @@ def transform(img_path):
 
     return img_color
 
+def plot_plot():
+    fig = plt.figure()
+    fig.set_size_inches(15, 10)
+    pics = glob.glob(os.path.join(os.getcwd(),  "steps/*.jpg"))
+    for idx, img in enumerate(sorted(pics)):
+        a = fig.add_subplot(2, 3, idx % 6 + 1)
+        a.axis("off")
+        imgplot = plt.imshow(cv2.cvtColor(cv2.imread(img),cv2.COLOR_BGR2RGB))
+    plt.savefig("steps.pdf")
 
 if __name__ == "__main__":
+    # plot_plot()
     args = parse()
 
     fig = plt.figure()
-    fig.set_size_inches(30, 20)
+    # Changing the resolution here.
+    fig.set_size_inches(100, 70)
 
     if not os.path.exists(args.output):
         os.makedirs(args.output)
@@ -116,5 +127,5 @@ if __name__ == "__main__":
 
         cv2.imwrite(os.path.join(args.output, os.path.basename(img)), transform(img))
         if (idx + 1) % 9 == 0:
-            plt.savefig("results" + str(idx) + ".pdf")
+            plt.savefig("high_res_results" + str(idx) + ".pdf")
 
