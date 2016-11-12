@@ -7,3 +7,5 @@ To get results like shown below, several functions have been used:
   + Contrast limited adaptive histogram equalization
 
   
+Example result:
+![image]: (https://github.com/mpralat/PlaneContours/blob/master/samolot03.jpg "Example result")
